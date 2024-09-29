@@ -1,0 +1,65 @@
+@inject SettingsService SettingsService
+@inject NavigationManager Navigation
+
+<MudPaper Class="macros-tracker pa-4 mb-4" Elevation="1">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <MudText Typo="Typo.h5" Class="section-title">Macros Tracker</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" OnClick="NavigateToSettings" />
+    </div>
+    <div class="macro-bar">
+        <div class="progress-bar-container">
+            <div class="@(GetProgressBarClass(KilojoulesPercentage))" style="width:@Math.Min(KilojoulesPercentage, 100)%"></div>
+        </div>
+        <MudText>Kilojoules: @CurrentKilojoules / @settings.KilojoulesGoal kj</MudText>
+    </div>
+    <div class="macro-bar">
+        <div class="progress-bar-container">
+            <div class="@(GetProgressBarClass(ProteinPercentage))" style="width:@Math.Min(ProteinPercentage, 100)%"></div>
+        </div>
+        <MudText>Protein: @CurrentProtein / @settings.ProteinGoal g</MudText>
+    </div>
+    <div class="macro-bar">
+        <div class="progress-bar-container">
+            <div class="@(GetProgressBarClass(CarbsPercentage))" style="width:@Math.Min(CarbsPercentage, 100)%"></div>
+        </div>
+        <MudText>Carbs: @CurrentCarbs / @settings.CarbsGoal g</MudText>
+    </div>
+    <div class="macro-bar">
+        <div class="progress-bar-container">
+            <div class="@(GetProgressBarClass(FatPercentage))" style="width:@Math.Min(FatPercentage, 100)%"></div>
+        </div>
+        <MudText>Fat: @CurrentFat / @settings.FatGoal g</MudText>
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public List<Meal> Meals { get; set; } = new List<Meal>();
+
+    private SettingsModel settings = new SettingsModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await SettingsService.GetSettingsAsync();
+    }
+
+    private int CurrentKilojoules => Meals.Sum(m => m.Kilojoules);
+    private int CurrentProtein => Meals.Sum(m => m.Protein);
+    private int CurrentCarbs => Meals.Sum(m => m.Carbs);
+    private int CurrentFat => Meals.Sum(m => m.Fat);
+
+    private double KilojoulesPercentage => (double)CurrentKilojoules / settings.KilojoulesGoal * 100;
+    private double ProteinPercentage => (double)CurrentProtein / settings.ProteinGoal * 100;
+    private double CarbsPercentage => (double)CurrentCarbs / settings.CarbsGoal * 100;
+    private double FatPercentage => (double)CurrentFat / settings.FatGoal * 100;
+
+    private string GetProgressBarClass(double percentage)
+    {
+        return percentage > 100 ? "progress-bar-fill over-goal" : "progress-bar-fill normal";
+    }
+
+    private void NavigateToSettings()
+    {
+        Navigation.NavigateTo("/settings");
+    }
+}

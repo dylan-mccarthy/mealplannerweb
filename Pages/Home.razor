@@ -1,0 +1,64 @@
+﻿@page "/"
+
+@using MealPlanner.Models
+@inject MealService MealService
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="main-container">
+    <!-- Header Section -->
+    <MudPaper Class="header-section pa-4" Elevation="0">
+        <MudText Typo="Typo.h3" Class="app-title">Meal Planner</MudText>
+        <MudGrid Class="date-container" Justify="Justify.Center">
+            <MudItem>
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary" OnClick="PreviousDay" />
+            </MudItem>
+            <MudItem>
+                <MudText Typo="Typo.subtitle1" Class="current-date">@CurrentDate.ToString("dddd, MMMM d, yyyy")</MudText>
+            </MudItem>
+            <MudItem>
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Primary" OnClick="NextDay"/>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Macros Tracker -->
+    <MacrosTracker Meals="Meals" />
+
+    <!-- Meals List -->
+    <MealsList Meals="@Meals" OnMealsChanged="HandleMealsChanged" CurrentDate="CurrentDate" />
+</MudContainer>
+
+@code {
+
+    private DateTime CurrentDate = DateTime.Now;
+    private List<Meal> Meals = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize with some sample data or fetch from a database
+        await LoadMealsforDate(CurrentDate);
+    }
+
+    private async void NextDay()
+    {
+        CurrentDate = CurrentDate.AddDays(1);
+        await LoadMealsforDate(CurrentDate);
+    }
+
+    private async void PreviousDay()
+    {
+        CurrentDate = CurrentDate.AddDays(-1);
+        await LoadMealsforDate(CurrentDate);
+    }
+
+    private async Task LoadMealsforDate(DateTime date)
+    {
+        // Fetch meals for the selected date from the database
+        Meals = await MealService.GetMealsForDateAsync(date);
+    }
+
+    private async void HandleMealsChanged(List<Meal> updatedMeals)
+    {
+
+        Meals = await MealService.GetMealsForDateAsync(CurrentDate); // Refresh after changes
+    }
+}

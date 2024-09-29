@@ -1,0 +1,40 @@
+﻿@page "/settings"
+@inject SettingsService SettingsService
+@inject NavigationManager Navigation
+
+<MudPaper Class="pa-4 mb-4 centered-container" Elevation="1">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="NavigateBack" />
+        <MudText Typo="Typo.h5" Class="section-title">Settings</MudText>
+    </div>
+    <div class="form-container">
+        <MudForm @ref="form" Model="@settings" Validated="OnValidSubmit">
+            <MudTextField @bind-Value="settings.KilojoulesGoal" Label="Kilojoules Goal" Required="true" Class="bordered-input" />
+            <MudTextField @bind-Value="settings.ProteinGoal" Label="Protein Goal (g)" Required="true" Class="bordered-input" />
+            <MudTextField @bind-Value="settings.CarbsGoal" Label="Carbs Goal (g)" Required="true" Class="bordered-input" />
+            <MudTextField @bind-Value="settings.FatGoal" Label="Fat Goal (g)" Required="true" Class="bordered-input" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitSettings" Class="bordered-button">Save Settings</MudButton>
+        </MudForm>
+    </div>
+</MudPaper>
+
+@code {
+    private MudForm form;
+    private SettingsModel settings = new SettingsModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await SettingsService.GetSettingsAsync();
+    }
+
+    private async Task SubmitSettings()
+    {
+        await SettingsService.UpdateSettingsAsync(settings);
+        Navigation.NavigateTo("/");
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+}

@@ -1,0 +1,94 @@
+@inject MealPlanner.Services.MealService MealService
+
+<MudText Typo="Typo.h5" Class="section-title">Meals</MudText>
+<MudPaper Class="meals-list" Elevation="1">
+    <MudTable Items="Meals" Hover="true" Class="meals-table">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Kilojoules (kJ)</MudTh>
+            <MudTh>Protein (g)</MudTh>
+            <MudTh>Carbs (g)</MudTh>
+            <MudTh>Fat (g)</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Kilojoules</MudTd>
+            <MudTd>@context.Protein</MudTd>
+            <MudTd>@context.Carbs</MudTd>
+            <MudTd>@context.Fat</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteMeal(context))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+<MudPaper Class="meals-add-button" Elevation="0">
+    <!-- Add Meal Button -->
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="ToggleAddMealForm" Class="add-meal-button mt-4">
+        @(!IsAddingMeal ? "Add Meal" : "Cancel")
+    </MudButton>
+</MudPaper>
+
+ @if (IsAddingMeal)
+    {
+        <MudPaper Class="add-meal-form pa-4 mt-4" Elevation="0">
+            <MudForm @ref="form" Model="NewMeal" Class="add-meal-form-fields">
+                <MudTextField @bind-Value="NewMeal.Name" Label="Meal Name" Required="true" Class="input-field" />
+                <MudNumericField @bind-Value="NewMeal.Kilojoules" Label="Kilojoules (kJ)" Required="true" Class="input-field" />
+                <MudNumericField @bind-Value="NewMeal.Protein" Label="Protein (g)" Required="true" Class="input-field" />
+                <MudNumericField @bind-Value="NewMeal.Carbs" Label="Carbs (g)" Required="true" Class="input-field" />
+                <MudNumericField @bind-Value="NewMeal.Fat" Label="Fat (g)" Required="true" Class="input-field" />
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitMeal" Class="submit-meal-button">
+                    Save Meal
+                </MudButton>
+            </MudForm>
+        </MudPaper>
+    }
+
+@code {
+    [Parameter]
+    public DateTime CurrentDate { get; set; }
+
+    [Parameter]
+    public List<Meal> Meals { get; set; }
+
+    [Parameter]
+    public EventCallback<List<Meal>> OnMealsChanged { get; set; }
+
+    private bool IsAddingMeal = false;
+    private Meal NewMeal = new Meal();
+    private MudForm form;
+
+    private void ToggleAddMealForm()
+    {
+        IsAddingMeal = !IsAddingMeal;
+        if (!IsAddingMeal)
+        {
+            // Reset the form when closing
+            NewMeal = new Meal();
+        }
+    }
+
+    private async Task SubmitMeal()
+    {
+        await form.Validate();
+        if (form.IsValid)
+        {
+            NewMeal.Date = CurrentDate.ToString("yyyy-MM-dd");
+            Meals.Add(NewMeal);
+            await MealService.AddMealAsync(NewMeal);
+            await OnMealsChanged.InvokeAsync(Meals);
+            NewMeal = new Meal();
+            IsAddingMeal = false;
+        }
+    }
+
+    private async void DeleteMeal(Meal meal)
+    {
+        Meals.Remove(meal);
+        await MealService.DeleteMealAsync(meal.Id);
+        await OnMealsChanged.InvokeAsync(Meals);
+    }
+}
